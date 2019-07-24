@@ -9,31 +9,56 @@ export function create(req: Request, res: Response): Promise<void> {
   const customerId = req.params.customerId as string;
 
   return CreateChargeReqBodyDecoder.runPromise(req.body)
-    .then(({amount, description}) =>
+    .then(args =>
       stripe.charges.create({
-        amount: amount,
-        description: description,
-        currency: 'jpy',
         customer: customerId,
+        ...args,
       }),
     )
     .then(carge => {
       res.json({id: carge.id});
     })
     .catch(err => {
-      console.error(err);
+      console.log(err);
       res.status(400).json({msg: 'Invalid payload or customer id'});
     });
 }
 
 interface CreateChargeReqBody {
   amount: number;
+  currency: 'jpy';
+  source: string;
   description: string;
+  shipping: {
+    name: string;
+    address: {
+      country: 'JP';
+      postal_code: string;
+      state: string;
+      line1: string;
+      line2: string;
+    };
+  };
 }
 
 const CreateChargeReqBodyDecoder: D.Decoder<CreateChargeReqBody> = D.object({
   amount: D.number(),
+  currency: D.constant('jpy'),
+  source: D.string().where(
+    s => s.startsWith('card_'),
+    'expected a card id, got another',
+  ),
   description: D.string(),
+  shipping: D.object({
+    name: D.string(),
+    address: D.object({
+      country: D.constant('JP'),
+      postal_code: D.string(),
+      state: D.string(),
+      line1: D.string(),
+      line2: D.string(),
+    }),
+  }),
 });
 
 /*
@@ -48,7 +73,7 @@ export function get(req: Request, res: Response): Promise<void> {
       res.json(charges.data);
     })
     .catch(err => {
-      console.error(err);
+      console.log(err);
       res.status(400).json({msg: 'Invalid customer id'});
     });
 }
