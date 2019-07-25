@@ -26,3 +26,20 @@ interface CreateCardReqBody {
 const CreateCardReqBodyDecoder: D.Decoder<CreateCardReqBody> = D.object({
   source: D.string(),
 });
+
+/*
+ * GET /customers/:customerId/cards
+ */
+export function get(req: Request, res: Response): Promise<void> {
+  const customerId = req.params.customerId as string;
+
+  return stripe.customers
+    .listSources(customerId, {object: 'card'})
+    .then(cards => {
+      res.json(cards.data);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(400).json({msg: 'Invalid customer id'});
+    });
+}

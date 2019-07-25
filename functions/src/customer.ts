@@ -9,7 +9,7 @@ export function create(req: Request, res: Response): Promise<void> {
   return CreateCustomerReqBodyDecoder.runPromise(req.body)
     .then(args => stripe.customers.create(args))
     .then(customer => {
-      res.json({customerId: customer.id});
+      res.json({id: customer.id});
     })
     .catch(err => {
       console.log(err);
