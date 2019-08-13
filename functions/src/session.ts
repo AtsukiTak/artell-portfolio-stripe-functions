@@ -2,7 +2,7 @@ import {Request, Response} from 'express';
 import * as D from '@mojotech/json-type-validation';
 import * as firebase from 'firebase-admin';
 
-import stripe from './stripe';
+import {getStripe} from './stripe';
 
 const firestore = firebase.firestore();
 const storage = firebase.storage();
@@ -10,7 +10,19 @@ const storage = firebase.storage();
 /*
  * POST /session
  */
-export function create(req: Request, res: Response): Promise<void> {
+export function createInLive(req: Request, res: Response): Promise<void> {
+  return create(req, res, 'live');
+}
+
+export function createInTest(req: Request, res: Response): Promise<void> {
+  return create(req, res, 'test');
+}
+
+function create(
+  req: Request,
+  res: Response,
+  mode: 'live' | 'test',
+): Promise<void> {
   return ReqBodyDecoder.runPromise(req.body)
     .then(({artistUid, artId}) =>
       Promise.all([
@@ -19,10 +31,11 @@ export function create(req: Request, res: Response): Promise<void> {
       ]),
     )
     .then(([art, sumbnailUrl]) =>
-      stripe.checkout.sessions.create({
+      getStripe(mode).checkout.sessions.create({
         payment_method_types: ['card'],
+        billing_address_collection: 'required',
         success_url: 'https://artell-portfolio.netlify.com/purchase/success',
-        cancel_url: 'https://artell-portfolio.netlify.com/purchase/cancel',
+        cancel_url: `https://artell-portfolio.netlify.com`,
         line_items: [
           {
             name: art.title,
