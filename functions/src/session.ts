@@ -26,16 +26,17 @@ function create(
   return ReqBodyDecoder.runPromise(req.body)
     .then(({artistUid, artId}) =>
       Promise.all([
+        fetchArtistName(artistUid),
         fetchArtData(artistUid, artId),
         fetchArtSumbnailUrl(artistUid, artId),
       ]),
     )
-    .then(([art, sumbnailUrl]) =>
+    .then(([artistName, art, sumbnailUrl]) =>
       getStripe(mode).checkout.sessions.create({
         payment_method_types: ['card'],
         billing_address_collection: 'required',
-        success_url: 'https://artell-portfolio.netlify.com/purchase/success',
-        cancel_url: `https://artell-portfolio.netlify.com`,
+        success_url: 'https://portfolio.artell.life/_thanks',
+        cancel_url: `https://portfolio.artell.life/${artistName}/${art.title}`,
         line_items: [
           {
             name: art.title,
@@ -65,6 +66,13 @@ const ReqBodyDecoder: D.Decoder<ReqBody> = D.object({
   artistUid: D.string(),
   artId: D.string(),
 });
+
+function fetchArtistName(artistUid: string): Promise<string> {
+  return firestore
+    .doc(`artists/${artistUid}`)
+    .get()
+    .then(doc => (doc.data() as any).name as string);
+}
 
 function fetchArtData(artistUid: string, artId: string): Promise<ArtData> {
   return firestore
