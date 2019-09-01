@@ -36,7 +36,9 @@ function create(
         payment_method_types: ['card'],
         billing_address_collection: 'required',
         success_url: 'https://portfolio.artell.life/_thanks',
-        cancel_url: `https://portfolio.artell.life/${artistName}/${art.title}`,
+        cancel_url: `https://portfolio.artell.life/${encodeURIComponent(
+          artistName,
+        )}/${encodeURIComponent(art.title)}`,
         line_items: [
           {
             name: art.title,
