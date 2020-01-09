@@ -43,7 +43,7 @@ function create(
           {
             name: art.title,
             images: [sumbnailUrl],
-            amount: art.priceYen,
+            amount: art.salesPriceYen,
             currency: 'jpy',
             quantity: 1,
           },
@@ -86,12 +86,12 @@ function fetchArtData(artistUid: string, artId: string): Promise<ArtData> {
 
 interface ArtData {
   title: string;
-  priceYen: number;
+  salesPriceYen: number;
 }
 
 const ArtDataDecoder: D.Decoder<ArtData> = D.object({
   title: D.string(),
-  priceYen: D.number(),
+  salesPriceYen: D.number(),
 });
 
 const SumbnailExpireMilliSec: number = 1000 * 60 * 60;
